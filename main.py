@@ -13,3 +13,4 @@ for file in os.listdir(inputDir):
 def extractText(filePath, outputDir):
 
 
+#Continue on making the path functionality first make it all one function if it is too hard
