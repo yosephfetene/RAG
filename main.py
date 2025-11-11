@@ -1,7 +1,15 @@
 import os
 from pathlib import Path
 
-
-#current_directory = os.getcwd()
 inputDir = Path("/pdf/Biology")
-print (f"Input Directory: {inputDir}")
+outputDir = Path("/Output")
+
+for file in os.listdir(inputDir):
+    filePath = inputDir / file
+    exctractText(filePath, outputDir)
+
+
+
+def extractText(filePath, outputDir):
+
+
