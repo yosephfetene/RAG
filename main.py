@@ -1,16 +1,24 @@
 import os
 from pathlib import Path
+def main():
+    inputDir = Path("pdf/Biology")
+    outputDir = Path("Output")
 
-inputDir = Path("/pdf/Biology")
-outputDir = Path("/Output")
+    files = []
+    try:
+        files = os.listdir(inputDir)
+    except Exception as e:
+        print("Error accessing directory:", e)
+        return
+    
+    for file in files:
+        pdfPath = inputDir / file
+        baseName = os.path.splitext(file)[0]
 
-for file in os.listdir(inputDir):
-    filePath = inputDir / file
-    exctractText(filePath, outputDir)
+        print(f"processing file: {pdfPath}")
+        
+        
 
 
 
-def extractText(filePath, outputDir):
-
-
-#Continue on making the path functionality first make it all one function if it is too hard
+main()
