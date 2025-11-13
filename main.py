@@ -28,9 +28,8 @@ def main():
             print(f"Failed to extracct text from {file}:", err)
             continue
         outPath = os.path.join(outputDir, baseName + ".txt")
-
-        
-
-
-
-main()
+        with open(outPath, "w", encoding="utf-8") as f:
+            f.write(finalText.strip())
+        print(f"Saved and extracted text to: {outPath}")
+if __name__ == "__main__":
+    main()
