@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import pdfplumber
 def main():
     inputDir = Path("pdf/Biology")
     outputDir = Path("Output")
@@ -19,9 +20,14 @@ def main():
         
         finalText = ""
         try: 
-            with.pdfplumber.open(pdfPath) as pdf:
+            with pdfplumber.open(pdfPath) as pdf:
                 for i, page in enumerate(pdf.pages)
                 text = page.extract_text() or ""
+                finalText += f"\n--- Page: {i + 1}---\n"
+        except Exception as err:
+            print(f"Failed to extracct text from {file}:", err)
+            continue
+        outPath = os.path.join(outputDir, baseName + ".txt")
 
         
 
