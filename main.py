@@ -17,6 +17,12 @@ def main():
 
         print(f"processing file: {pdfPath}")
         
+        finalText = ""
+        try: 
+            with.pdfplumber.open(pdfPath) as pdf:
+                for i, page in enumerate(pdf.pages)
+                text = page.extract_text() or ""
+
         
 
 
