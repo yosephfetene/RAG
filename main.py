@@ -1,7 +1,11 @@
 import os
 import re
-import pdf2image
+from pdf2image import convert_from_path
 import pytesseract
+from PIL import Image
+import cv2
+import numpy as np
+from PIL import Image
 
 def main():
     inputDir = './pdf/Biology'
@@ -18,6 +22,39 @@ def main():
         print(f"Files in {inputDir} can't be found")
         return
     
+    def remove_colored_boxes(img):
+        cv_img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+        hsv = cv2.cvtColor(cv_img, cv2.COLOR_BGR2HSV)
+
+        orange_low  = np.array([5, 60, 50])
+        orange_high = np.array([20, 255, 255])
+
+        yellow_low  = np.array([20, 60, 80])
+        yellow_high = np.array([35, 255, 255])
+
+        blue_low  = np.array([85, 40, 40])
+        blue_high = np.array([140, 255, 255])
+
+        brown_low = np.array([8, 40, 40])
+        brown_high = np.array([20, 255, 200])
+
+        mask1 = cv2.inRange(hsv, orange_low, orange_high)
+        mask2 = cv2.inRange(hsv, yellow_low, yellow_high)
+        mask3 = cv2.inRange(hsv, blue_low, blue_high)
+        mask4 = cv2.inRange(hsv, brown_low, brown_high)
+
+        mask = mask1 | mask2 | mask3 | mask4
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        for c in contours:
+            x, y, w, h = cv2.boundingRect(c)
+            if w > 150 and h > 50:
+                cv2.rectangle(cv_img, (x, y), (x+w, y+h), (255, 255, 255), -1)
+
+        cleaned = Image.fromarray(cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB))
+        return cleaned
+
+
     def clean_text(text):
         text = re.sub(r"--- Page: \d+ ---", "", text)
         text = re.sub(r"^\s*\d+\s+Grade\s+\d+\s*$", "", text,flags=re.MULTILINE)
@@ -38,10 +75,11 @@ def main():
 
         try:
 
-            pages = pdf2image.convert_from_path(pdfPath, dpi=300)
+            pages = convert_from_path(pdfPath, dpi=300)
 
             for i, page in enumerate(pages):
-                raw = pytesseract.image_to_string(page, lang='eng')
+                cleaned_page = remove_colored_boxes(page)
+                raw = pytesseract.image_to_string(cleaned_page, lang='eng')
                 clean = clean_text(raw)
                 finalText += f"\n--- Page: {i + 1} ---\n{clean}\n"
 
