@@ -26,6 +26,7 @@ def main():
         cv_img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
         hsv = cv2.cvtColor(cv_img, cv2.COLOR_BGR2HSV)
 
+        # Existing color ranges
         orange_low  = np.array([5, 60, 50])
         orange_high = np.array([20, 255, 255])
 
@@ -38,12 +39,22 @@ def main():
         brown_low = np.array([8, 40, 40])
         brown_high = np.array([20, 255, 200])
 
+        # NEW COLOR → RGB(252,227,201)
+        # Converted to HSV ≈ (20°, 20%, 99%) so we widen the range:
+        light_orange_low  = np.array([15, 20, 180])
+        light_orange_high = np.array([25, 120, 255])
+
+        # Masks
         mask1 = cv2.inRange(hsv, orange_low, orange_high)
         mask2 = cv2.inRange(hsv, yellow_low, yellow_high)
         mask3 = cv2.inRange(hsv, blue_low, blue_high)
         mask4 = cv2.inRange(hsv, brown_low, brown_high)
+        mask5 = cv2.inRange(hsv, light_orange_low, light_orange_high)  # NEW
 
-        mask = mask1 | mask2 | mask3 | mask4
+        # Combine
+        mask = mask1 | mask2 | mask3 | mask4 | mask5
+
+        # Remove large colored blocks
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
         for c in contours:
@@ -53,6 +64,7 @@ def main():
 
         cleaned = Image.fromarray(cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB))
         return cleaned
+
 
 
     def clean_text(text):
