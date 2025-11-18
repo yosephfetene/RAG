@@ -5,7 +5,6 @@ import pytesseract
 from PIL import Image
 import cv2
 import numpy as np
-from PIL import Image
 
 def main():
     inputDir = './pdf/Biology'
@@ -26,44 +25,32 @@ def main():
         cv_img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
         hsv = cv2.cvtColor(cv_img, cv2.COLOR_BGR2HSV)
 
-        # Existing color ranges
-        orange_low  = np.array([5, 60, 50])
-        orange_high = np.array([20, 255, 255])
+        # --- COLOR RANGES (same as yours) ---
+        colors = [
+            (np.array([5, 60, 50]),   np.array([20, 255, 255])),   # orange
+            (np.array([20, 60, 80]),  np.array([35, 255, 255])),   # yellow
+            (np.array([85, 40, 40]),  np.array([140, 255, 255])),  # blue
+            (np.array([8, 40, 40]),   np.array([20, 255, 200])),   # brown
+            (np.array([15, 20, 180]), np.array([25, 120, 255])),   # light orange
+            (np.array([70, 0, 150]),  np.array([100, 90, 255]))    # blue2
+        ]
 
-        yellow_low  = np.array([20, 60, 80])
-        yellow_high = np.array([35, 255, 255])
+        # Combine all masks
+        mask = None
+        for low, high in colors:
+            m = cv2.inRange(hsv, low, high)
+            mask = m if mask is None else (mask | m)
 
-        blue_low  = np.array([85, 40, 40])
-        blue_high = np.array([140, 255, 255])
+        # --- FIX: Dilate mask to capture ALL of the colored region ---
+        kernel = np.ones((25, 25), np.uint8)
+        mask = cv2.dilate(mask, kernel, iterations=2)
 
-        brown_low = np.array([8, 40, 40])
-        brown_high = np.array([20, 255, 200])
-
-        # NEW COLOR → RGB(252,227,201)
-        # Converted to HSV ≈ (20°, 20%, 99%) so we widen the range:
-        light_orange_low  = np.array([15, 20, 180])
-        light_orange_high = np.array([25, 120, 255])
-
-        # Masks
-        mask1 = cv2.inRange(hsv, orange_low, orange_high)
-        mask2 = cv2.inRange(hsv, yellow_low, yellow_high)
-        mask3 = cv2.inRange(hsv, blue_low, blue_high)
-        mask4 = cv2.inRange(hsv, brown_low, brown_high)
-        mask5 = cv2.inRange(hsv, light_orange_low, light_orange_high)  # NEW
-
-        # Combine
-        mask = mask1 | mask2 | mask3 | mask4 | mask5
-
-        # Remove large colored blocks
-        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-
-        for c in contours:
-            x, y, w, h = cv2.boundingRect(c)
-            if w > 150 and h > 50:
-                cv2.rectangle(cv_img, (x, y), (x+w, y+h), (255, 255, 255), -1)
+        # Remove the masks — paint white over them
+        cv_img[mask > 0] = (255, 255, 255)
 
         cleaned = Image.fromarray(cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB))
         return cleaned
+
 
 
 
