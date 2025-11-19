@@ -23,33 +23,28 @@ def main():
     
     def remove_colored_boxes(img):
         cv_img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-        hsv = cv2.cvtColor(cv_img, cv2.COLOR_BGR2HSV)
+        lab = cv2.cvtColor(cv_img, cv2.COLOR_BGR2LAB)
+        a = lab[:, :, 1].astype(np.int16) - 128
+        b = lab[:, :, 2].astype(np.int16) - 128
+        chroma = np.sqrt(a * a + b * b).astype(np.uint8)
 
-        # --- COLOR RANGES (same as yours) ---
-        colors = [
-            (np.array([5, 60, 50]),   np.array([20, 255, 255])),   # orange
-            (np.array([20, 60, 80]),  np.array([35, 255, 255])),   # yellow
-            (np.array([85, 40, 40]),  np.array([140, 255, 255])),  # blue
-            (np.array([8, 40, 40]),   np.array([20, 255, 200])),   # brown
-            (np.array([15, 20, 180]), np.array([25, 120, 255])),   # light orange
-            (np.array([70, 0, 150]),  np.array([100, 90, 255]))    # blue2
-        ]
+        _, color_mask = cv2.threshold(chroma, 15, 255, cv2.THRESH_BINARY)
 
-        # Combine all masks
-        mask = None
-        for low, high in colors:
-            m = cv2.inRange(hsv, low, high)
-            mask = m if mask is None else (mask | m)
+        kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (15, 15))
+        color_mask = cv2.morphologyEx(color_mask, cv2.MORPH_CLOSE, kernel, iterations=2)
+        color_mask = cv2.dilate(color_mask, kernel, iterations=2)
 
-        # --- FIX: Dilate mask to capture ALL of the colored region ---
-        kernel = np.ones((25, 25), np.uint8)
-        mask = cv2.dilate(mask, kernel, iterations=2)
+        contours, _ = cv2.findContours(color_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
-        # Remove the masks — paint white over them
-        cv_img[mask > 0] = (255, 255, 255)
+        for c in contours:
+            x, y, w, h = cv2.boundingRect(c)
+            if w > 100 and h > 30 and cv2.contourArea(c) > 500:
+                cv2.rectangle(cv_img, (x, y), (x + w, y + h), (255, 255, 255), -1)
 
         cleaned = Image.fromarray(cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB))
         return cleaned
+
+
 
 
 
