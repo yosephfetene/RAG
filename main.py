@@ -28,7 +28,7 @@ def main():
         b = lab[:, :, 2].astype(np.int16) - 128
         chroma = np.sqrt(a * a + b * b).astype(np.uint8)
 
-        _, color_mask = cv2.threshold(chroma, 15, 255, cv2.THRESH_BINARY)
+        _, color_mask = cv2.threshold(chroma, 8, 255, cv2.THRESH_BINARY)
 
         kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (15, 15))
         color_mask = cv2.morphologyEx(color_mask, cv2.MORPH_CLOSE, kernel, iterations=2)
